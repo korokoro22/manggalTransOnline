@@ -258,7 +258,7 @@ return [
     */
 
     'use_route_url' => false,
-    'dashboard_url' => 'home',
+    'dashboard_url' => 'dashboard',
     'logout_url' => 'logout',
     'login_url' => 'login',
     'register_url' => 'register',
@@ -331,6 +331,13 @@ return [
         [
             'text' => 'Master Barang',
             'url' => 'master-barang',
+            'icon' => 'fas fa-solid fa-warehouse',
+            // 'label' => 4,
+            // 'label_color' => 'success',
+        ],
+        [
+            'text' => 'Laporan Barang',
+            'url' => 'laporan-barang',
             'icon' => 'fas fa-solid fa-warehouse',
             // 'label' => 4,
             // 'label_color' => 'success',

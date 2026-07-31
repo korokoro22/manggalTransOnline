@@ -4,20 +4,17 @@
     <meta charset="utf-8">
     <title>Laporan Master Barang</title>
     <style>
-        body { font-family: sans-serif; font-size: 11px; }
+        body { font-family: sans-serif; font-size: 12px; }
         h3 { text-align: center; margin-bottom: 5px; }
         p.subtitle { text-align: center; margin-top: 0; color: #666; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th { background-color: #17a2b8; color: white; padding: 6px; text-align: center; }
-        td { padding: 5px 6px; border: 1px solid #ddd; vertical-align: middle; }
+        td { padding: 5px 6px; border: 1px solid #ddd; vertical-align: top; }
         tr:nth-child(even) { background-color: #f9f9f9; }
-        .text-center { text-align: center; }
         .text-right { text-align: right; }
-        .badge { padding: 2px 5px; border-radius: 3px; font-size: 10px; }
-        .badge-warning { background-color: #ffc107; color: #000; }
-        .badge-info { background-color: #17a2b8; color: #fff; }
-        .badge-secondary { background-color: #6c757d; color: #fff; }
-        .stok-menipis { color: red; font-weight: bold; }
+        .text-center { text-align: center; }
+        .badge-menipis { background-color: #dc3545; color: white; padding: 2px 5px; border-radius: 3px; font-size: 10px; }
+        .badge-aman { color: #28a745; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -28,55 +25,74 @@
     <table>
         <thead>
             <tr>
-                <th width="4%">No</th>
-                <th width="10%">Kode Barang</th>
-                <th width="8%">Foto</th>
+                <th width="5%">No</th>
                 <th>Nama Barang</th>
-                <th width="10%">Kategori</th>
-                <th width="6%">Qty</th>
-                <th width="8%">Satuan</th>
-                <th width="8%">Qty Satuan</th>
-                <th width="10%">Stok Saat Ini</th>
-                <th width="12%">Harga Jual</th>
-                <th width="10%">Tanggal Masuk</th>
+                <th width="12%">Jumlah Batch</th>
+                <th width="12%">Total Stok</th>
+                <th width="20%">Rentang Harga</th>
+                <th width="15%">Tanggal Masuk Terakhir</th>
             </tr>
         </thead>
         <tbody>
-            @forelse ($barangs as $index => $barang)
+            @forelse($barangs as $index => $item)
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
-                <td>{{ $barang->kode_barang }}</td>
+                <td>{{ $item->nama_barang }}</td>
+                <td class="text-center">{{ $item->jumlah_batch }} Batch</td>
                 <td class="text-center">
-                    @if ($barang->foto)
-                        <img src="{{ storage_path('app/public/' . $barang->foto) }}"
-                            style="width:45px; height:45px; object-fit:cover; border-radius:3px;">
+                    @if ($item->total_stok <= 5)
+                        <span class="badge-menipis">{{ number_format($item->total_stok) }} Pcs</span>
                     @else
-                        -
+                        <span class="badge-aman">{{ number_format($item->total_stok) }} Pcs</span>
                     @endif
                 </td>
-                <td>{{ $barang->nama_barang }}</td>
+                <td class="text-right">
+                    @if ($item->harga_terendah == $item->harga_tertinggi)
+                        Rp {{ number_format($item->harga_terendah, 0, ',', '.') }}
+                    @else
+                        Rp {{ number_format($item->harga_terendah, 0, ',', '.') }} - Rp {{ number_format($item->harga_tertinggi, 0, ',', '.') }}
+                    @endif
+                </td>
                 <td class="text-center">
-                    @if ($barang->kategori == 'oli_mesin') Oli Mesin
-                    @elseif ($barang->kategori == 'filter_solar') Filter Solar
-                    @else Item Bebas
-                    @endif
+                    {{ \Carbon\Carbon::parse($item->tanggal_masuk_terakhir)->format('d-m-Y H:i') }}
                 </td>
-                <td class="text-center">{{ $barang->qty }}</td>
-                <td class="text-center">{{ $barang->satuan }}</td>
-                <td class="text-center">{{ number_format($barang->qty_satuan) }} Pcs</td>
-                <td class="text-center {{ $barang->stok_saat_ini <= 5 ? 'stok-menipis' : '' }}">
-                    {{ number_format($barang->stok_saat_ini) }} Pcs
-                    {{ $barang->stok_saat_ini <= 5 ? '(Menipis)' : '' }}
-                </td>
-                <td class="text-right">Rp {{ number_format($barang->harga_jual, 0, ',', '.') }}</td>
-                <td class="text-center">{{ \Carbon\Carbon::parse($barang->tanggal_masuk)->format('d-m-Y H:i') }}</td>
             </tr>
             @empty
             <tr>
-                <td colspan="10" class="text-center">Tidak ada data</td>
+                <td colspan="6" class="text-center">Tidak ada data barang</td>
             </tr>
             @endforelse
         </tbody>
+       {{-- <tfoot>
+            <tr>
+                <td colspan="2" class="text-right"><strong>TOTAL KESELURUHAN</strong></td>
+                <td class="text-center">
+                    <strong>{{ $barangs->sum('jumlah_batch') }} Batch</strong>
+                </td>
+                <td class="text-center">
+                    <strong>{{ number_format($barangs->sum('total_stok')) }} Pcs</strong>
+                </td>
+                <td class="text-right">
+                    <strong>
+                        @if ($barangs->count() > 0)
+                            @php
+                                $minHargaKeseluruhan = $barangs->min('harga_terendah');
+                                $maxHargaKeseluruhan = $barangs->max('harga_tertinggi');
+                            @endphp
+                            
+                            @if ($minHargaKeseluruhan == $maxHargaKeseluruhan)
+                                Rp {{ number_format($minHargaKeseluruhan, 0, ',', '.') }}
+                            @else
+                                Rp {{ number_format($minHargaKeseluruhan, 0, ',', '.') }} - Rp {{ number_format($maxHargaKeseluruhan, 0, ',', '.') }}
+                            @endif
+                        @else
+                            -
+                        @endif
+                    </strong>
+                </td>
+                <td></td>
+            </tr>
+        </tfoot> --}}
     </table>
 
 </body>

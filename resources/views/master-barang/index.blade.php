@@ -25,9 +25,9 @@
             <i class="fas fa-file-pdf"></i> Export PDF
         </a>
 
-        <button class="btn btn-dark" data-toggle="modal" data-target="#modal-scan-qr">
+        {{-- <button class="btn btn-dark" data-toggle="modal" data-target="#modal-scan-qr">
             <i class="fas fa-qrcode"></i> SCAN QR CODE
-        </button>
+        </button> --}}
 
     </div>
 </div>
@@ -49,7 +49,7 @@
                        value="{{ request('nama_barang') }}">
             </div>
 
-            <div class="col-md-3">
+            {{-- <div class="col-md-3">
                 <label>Gudang</label>
                 <select name="gudang" class="form-control" style="text-transform: uppercase;">
                     <option value="">-- Semua Gudang --</option>
@@ -57,7 +57,7 @@
                     <option value="gudang_2"     {{ request('gudang') == 'gudang_2'     ? 'selected' : '' }}>Gudang 2</option>
                     <option value="gudang_3"     {{ request('gudang') == 'gudang_3'     ? 'selected' : '' }}>Gudang 3</option>
                 </select>
-            </div>
+            </div> --}}
 
             <div class="col-md-3">
                 <div class="form-group">
@@ -125,131 +125,85 @@
         <table class="table table-bordered table-striped">
 
             <thead class="text-center">
-                <tr>
-                    <th>No</th>
-                    <th>Kode Barang</th>
-                    <th>Foto</th>
-                    <th>Nama Barang</th>
-                    <th>Gudang</th>
-                    {{-- <th>Kategori</th> --}}
-                    <th>Qty</th>
-                    <th>Satuan</th>
-                    <th>Qty Satuan</th>
-                    <th>Stok Saat Ini</th>
-                    <th>Harga Jual</th>
-                    <th>Tanggal Masuk</th>
-                    <th>QR Code</th>
-                    <th width="10%">Aksi</th>
-                </tr>
-            </thead>
+    <tr>
+        <th>No</th>
+        {{-- <th>Kode Barang</th>
+        <th>Foto</th> --}}
+        <th>Nama Barang</th>
+        {{-- <th>Gudang</th> --}}
+        <th>Jumlah Batch</th>
+        <th>Total Stok</th>
+        <th>Rentang Harga</th>
+        <th>Tanggal Masuk Terakhir</th>
+        <th width="10%">Aksi</th>
+    </tr>
+</thead>
 
             <tbody>
 
-                @forelse ($barangs as $index => $barang)
-                <tr>
-                    <td class="text-center">{{ $barangs->firstItem() + $index }}</td>
-                    <td>{{ $barang->kode_barang }}</td>
-                    <td class="text-center">
-                        @if ($barang->foto)
-                            <img src="{{ asset('storage/' . $barang->foto) }}"
-                                 width="50"
-                                 style="border-radius:8px">
-                        @else
-                            <span class="text-muted">-</span>
-                        @endif
-                    </td>
-                    <td>{{ $barang->nama_barang }}</td>
-                    <td class="text-center">
-                        @php
-                            $labelGudang = match($barang->gudang) {
-                                'gudang_utama' => ['label' => 'Gudang Utama', 'color' => 'primary'],
-                                'gudang_2'     => ['label' => 'Gudang 2',     'color' => 'warning'],
-                                'gudang_3'     => ['label' => 'Gudang 3',     'color' => 'success'],
-                                default        => ['label' => '-',             'color' => 'secondary'],
-                            };
-                        @endphp
-                        <span class="badge badge-{{ $labelGudang['color'] }}">{{ $labelGudang['label'] }}</span>
-                    </td>
-                    {{-- <td class="text-center">
-                        @if ($barang->kategori == 'oli_mesin')
-                            <span class="badge badge-warning">Oli Mesin</span>
-                        @elseif ($barang->kategori == 'filter_solar')
-                            <span class="badge badge-info">Filter Solar</span>
-                        @else
-                            <span class="badge badge-secondary">Item Bebas</span>
-                        @endif
-                    </td> --}}
-                    <td class="text-center">{{ $barang->qty }}</td>
-                    <td class="text-center">{{ $barang->satuan }}</td>
-                    <td class="text-center">{{ number_format($barang->qty_satuan) }} Pcs</td>
-                    <td class="text-center">
-                        {{-- <span class="{{ $barang->stok_saat_ini <= 5 ? 'text-danger font-weight-bold' : 'text-success font-weight-bold' }}">
-                            {{ number_format($barang->stok_saat_ini) }} Pcs
-                        </span>
-                        @if ($barang->stok_saat_ini <= 5)
-                            <span class="badge badge-danger">Menipis</span>
-                        @endif --}}
-                        {{ number_format($barang->stok_saat_ini) }} Pcs
-                    </td>
-                    <td class="text-right">
-                        Rp {{ number_format($barang->harga_jual, 0, ',', '.') }}
-                    </td>
-                    <td class="text-center">
-                        {{ \Carbon\Carbon::parse($barang->tanggal_masuk)->format('d-m-Y H:i') }}
-                    </td>
-                    <td class="text-center">
-                        @if ($barang->qr_code)
-                            <img src="{{ asset('storage/' . $barang->qr_code) }}"
-                                 width="60"
-                                 style="border-radius:4px; cursor:pointer"
-                                 data-toggle="modal"
-                                 data-target="#modalQr{{ $barang->id }}">
-                        @else
-                            <span class="text-muted">-</span>
-                        @endif
-                    </td>
-                    <td class="text-center">
-                        <a href="{{ route('master-barang.show', $barang->id) }}"
-                           class="btn btn-info btn-sm">
-                            Detail
-                        </a>
-                    </td>
-                </tr>
+    @forelse ($barangs as $index => $item)
+        @php
+            $sample = $samples[$item->nama_barang] ?? null;
+        @endphp
+    <tr>
+        <td class="text-center">{{ $barangs->firstItem() + $index }}</td>
+        {{-- <td>{{ $sample->kode_barang ?? '-' }}</td>
+        <td class="text-center">
+            @if ($sample && $sample->foto)
+                <img src="{{ asset('storage/' . $sample->foto) }}"
+                     width="50"
+                     style="border-radius:8px">
+            @else
+                <span class="text-muted">-</span>
+            @endif
+        </td> --}}
+        <td>{{ $item->nama_barang }}</td>
+        {{-- <td class="text-center">
+            @php
+                $labelGudang = match($sample->gudang ?? null) {
+                    'gudang_utama' => ['label' => 'Gudang Utama', 'color' => 'primary'],
+                    'gudang_2'     => ['label' => 'Gudang 2',     'color' => 'warning'],
+                    'gudang_3'     => ['label' => 'Gudang 3',     'color' => 'success'],
+                    default        => ['label' => '-',             'color' => 'secondary'],
+                };
+            @endphp
+            <span class="badge badge-{{ $labelGudang['color'] }}">{{ $labelGudang['label'] }}</span>
+        </td> --}}
+        <td class="text-center">
+            <span class="badge badge-dark">{{ $item->jumlah_batch }} Batch</span>
+        </td>
+        <td class="text-center">
+            <span class="{{ $item->total_stok <= 5 ? 'text-danger font-weight-bold' : 'text-success font-weight-bold' }}">
+                {{ number_format($item->total_stok) }} Pcs
+            </span>
+            @if ($item->total_stok <= 5)
+                <span class="badge badge-danger">Menipis</span>
+            @endif
+        </td>
+        <td class="text-right">
+            @if ($item->harga_terendah == $item->harga_tertinggi)
+                Rp {{ number_format($item->harga_terendah, 0, ',', '.') }}
+            @else
+                Rp {{ number_format($item->harga_terendah, 0, ',', '.') }} - Rp {{ number_format($item->harga_tertinggi, 0, ',', '.') }}
+            @endif
+        </td>
+        <td class="text-center">
+            {{ \Carbon\Carbon::parse($item->tanggal_masuk_terakhir)->format('d-m-Y H:i') }}
+        </td>
+        <td class="text-center">
+            <a href="{{ route('master-barang.by-nama', $item->nama_barang) }}"
+               class="btn btn-info btn-sm">
+                Detail
+            </a>
+        </td>
+    </tr>
+    @empty
+    <tr>
+        <td colspan="10" class="text-center">Belum ada data barang</td>
+    </tr>
+    @endforelse
 
-                {{-- Modal QR per barang --}}
-                @if ($barang->qr_code)
-                <div class="modal fade" id="modalQr{{ $barang->id }}" tabindex="-1">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">QR Code — {{ $barang->nama_barang }}</h5>
-                                <button type="button" class="close" data-dismiss="modal">
-                                    <span>&times;</span>
-                                </button>
-                            </div>
-                            <div class="modal-body text-center">
-                                <img src="{{ asset('storage/' . $barang->qr_code) }}"
-                                     class="img-fluid"
-                                     style="max-width:250px">
-                                <p class="mt-2 text-muted">{{ $barang->kode_barang }} — {{ $barang->nama_barang }}</p>
-                                <a href="{{ asset('storage/' . $barang->qr_code) }}"
-                                   download="qrcode-{{ $barang->kode_barang }}.svg"
-                                   class="btn btn-outline-primary btn-sm mt-2">
-                                    <i class="fas fa-download"></i> Download QR
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                @endif
-
-                @empty
-                <tr>
-                    <td colspan="14" class="text-center">Belum ada data barang</td>
-                </tr>
-                @endforelse
-
-            </tbody>
+</tbody>
 
         </table>
     </div>

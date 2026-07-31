@@ -41,7 +41,7 @@
                     <td><strong>Nama Barang</strong></td>
                     <td>: {{ $barang->nama_barang }}</td>
                 </tr>
-                <tr>
+                {{-- <tr>
                     <td><strong>Kategori</strong></td>
                     <td>:
                         @if ($barang->kategori == 'oli_mesin')
@@ -52,6 +52,10 @@
                             <span class="badge badge-secondary">Item Bebas</span>
                         @endif
                     </td>
+                </tr> --}}
+                <tr>
+                    <td><strong>Lokasi Gudang</strong></td>
+                    <td>{{ $barang->gudang }}</td>
                 </tr>
                 <tr>
                     <td><strong>Qty</strong></td>
@@ -163,7 +167,7 @@
 
 </div>
 
-<a href="{{ route('master-barang.index') }}" class="btn btn-secondary mb-3">
+<a href="{{ route('master-barang.by-nama', $barang->nama_barang) }}" class="btn btn-secondary mb-3">
     <i class="fas fa-arrow-left"></i>
     Kembali
 </a>

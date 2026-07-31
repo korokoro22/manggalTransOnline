@@ -53,6 +53,93 @@ class NotaJalanController extends Controller
         return view('nota-jalan.index', compact('notaJalans', 'buses', 'tahunList'));
     }
 
+    // public function create()
+    // {
+    //     $buses = Bus::all();
+    //     return view('nota-jalan.create', compact('buses'));
+    // }
+
+    // public function store(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'bus_id'                 => 'required|exists:bus,id',
+    //         'tanggal'                => 'required|date',
+    //         'no_invoice'             => 'required|string|max:255',
+    //         'supplier'               => 'required|string|max:255',
+    //         'bukti_nota'             => 'nullable|image|max:2048',
+    //         'total'                  => 'required|integer|min:0',
+
+    //         'items'                  => 'required|array|min:1',
+    //         'items.*.tipe'           => 'required|in:per_item,biaya_pengerjaan',
+    //         'items.*.nama_item'      => 'nullable|string|max:255',
+    //         'items.*.qty'            => 'nullable|integer|min:1',
+    //         'items.*.satuan'         => 'nullable|string|max:50',
+    //         'items.*.harga_satuan'   => 'nullable|integer|min:0',
+    //         'items.*.keterangan'     => 'nullable|string|max:255',
+    //         'items.*.subtotal'       => 'required|integer|min:0',
+    //     ]);
+
+    //     // Validasi manual per item, karena required_if wildcard kurang reliable
+    //     foreach ($validated['items'] as $index => $item) {
+    //         if ($item['tipe'] === 'per_item') {
+    //             if (empty($item['nama_item']) || empty($item['qty']) || empty($item['satuan']) || !isset($item['harga_satuan'])) {
+    //                 return redirect()->back()
+    //                     ->withInput()
+    //                     ->with('error', "Item #" . ($index + 1) . ": Nama item, qty, satuan, dan harga satuan wajib diisi untuk tipe Per Item.");
+    //             }
+    //         } else { // biaya_pengerjaan
+    //             if (empty($item['keterangan'])) {
+    //                 return redirect()->back()
+    //                     ->withInput()
+    //                     ->with('error', "Item #" . ($index + 1) . ": Keterangan pengerjaan wajib diisi untuk tipe Biaya Pengerjaan.");
+    //             }
+    //         }
+    //     }
+
+    //     $buktiNotaPath = null;
+    //     if ($request->hasFile('bukti_nota')) {
+    //         $buktiNotaPath = $request->file('bukti_nota')->store('nota-jalan', 'public');
+    //     }
+
+    //     $transaksi = Transaksi_keluar::create([
+    //         'bus_id'          => $validated['bus_id'],
+    //         'kategori'        => 'nota_jalan',
+    //         'tanggal'         => $validated['tanggal'],
+    //         'no_invoice'      => $validated['no_invoice'],
+    //         'supplier'        => $validated['supplier'],
+    //         'bukti_nota'      => $buktiNotaPath,
+    //         'total_transaksi' => $validated['total'],
+    //     ]);
+
+    //     foreach ($validated['items'] as $item) {
+    //         if ($item['tipe'] === 'biaya_pengerjaan') {
+    //             Transaksi_keluar_detail::create([
+    //                 'transaksi_keluar_id' => $transaksi->id,
+    //                 'tipe'                => 'biaya_pengerjaan',
+    //                 'nama_item'           => $item['keterangan'],
+    //                 'keterangan'          => $item['keterangan'],
+    //                 'qty'                 => null,
+    //                 'satuan'              => null,
+    //                 'harga_satuan'        => null,
+    //                 'subtotal'            => $item['subtotal'],
+    //             ]);
+    //         } else {
+    //             Transaksi_keluar_detail::create([
+    //                 'transaksi_keluar_id' => $transaksi->id,
+    //                 'tipe'                => 'per_item',
+    //                 'nama_item'           => $item['nama_item'],
+    //                 'qty'                 => $item['qty'],
+    //                 'satuan'              => $item['satuan'],
+    //                 'harga_satuan'        => $item['harga_satuan'],
+    //                 'subtotal'            => $item['subtotal'],
+    //             ]);
+    //         }
+    //     }
+
+    //     return redirect()->route('nota-jalan.index')
+    //         ->with('success', 'Nota jalan berhasil disimpan.');
+    // }
+
     public function create()
     {
         $buses = Bus::all();
@@ -79,7 +166,6 @@ class NotaJalanController extends Controller
             'items.*.subtotal'       => 'required|integer|min:0',
         ]);
 
-        // Validasi manual per item, karena required_if wildcard kurang reliable
         foreach ($validated['items'] as $index => $item) {
             if ($item['tipe'] === 'per_item') {
                 if (empty($item['nama_item']) || empty($item['qty']) || empty($item['satuan']) || !isset($item['harga_satuan'])) {
@@ -87,7 +173,7 @@ class NotaJalanController extends Controller
                         ->withInput()
                         ->with('error', "Item #" . ($index + 1) . ": Nama item, qty, satuan, dan harga satuan wajib diisi untuk tipe Per Item.");
                 }
-            } else { // biaya_pengerjaan
+            } else {
                 if (empty($item['keterangan'])) {
                     return redirect()->back()
                         ->withInput()
@@ -116,22 +202,22 @@ class NotaJalanController extends Controller
                 Transaksi_keluar_detail::create([
                     'transaksi_keluar_id' => $transaksi->id,
                     'tipe'                => 'biaya_pengerjaan',
-                    'nama_item'           => $item['keterangan'],
-                    'keterangan'          => $item['keterangan'],
+                    'nama_item'           => $item['keterangan'] ?? null,
+                    'keterangan'          => $item['keterangan'] ?? null,
                     'qty'                 => null,
                     'satuan'              => null,
                     'harga_satuan'        => null,
-                    'subtotal'            => $item['subtotal'],
+                    'subtotal'            => $item['subtotal'] ?? 0,
                 ]);
             } else {
                 Transaksi_keluar_detail::create([
                     'transaksi_keluar_id' => $transaksi->id,
                     'tipe'                => 'per_item',
-                    'nama_item'           => $item['nama_item'],
-                    'qty'                 => $item['qty'],
-                    'satuan'              => $item['satuan'],
-                    'harga_satuan'        => $item['harga_satuan'],
-                    'subtotal'            => $item['subtotal'],
+                    'nama_item'           => $item['nama_item'] ?? null,
+                    'qty'                 => $item['qty'] ?? null,
+                    'satuan'              => $item['satuan'] ?? null,
+                    'harga_satuan'        => $item['harga_satuan'] ?? null,
+                    'subtotal'            => $item['subtotal'] ?? 0,
                 ]);
             }
         }
@@ -165,16 +251,17 @@ class NotaJalanController extends Controller
             'no_invoice'             => 'required|string|max:255',
             'supplier'               => 'required|string|max:255',
             'bukti_nota'             => 'nullable|image|max:2048',
-            'total'                  => 'required|integer|min:0',
+            // REVISI: Ubah integer menjadi numeric agar aman jika ada nilai .00 dari DB
+            'total'                  => 'required|numeric|min:0', 
 
             'items'                  => 'required|array|min:1',
             'items.*.tipe'           => 'required|in:per_item,biaya_pengerjaan',
             'items.*.nama_item'      => 'nullable|string|max:255',
-            'items.*.qty'            => 'nullable|integer|min:1',
+            'items.*.qty'            => 'nullable|numeric|min:1',
             'items.*.satuan'         => 'nullable|string|max:50',
-            'items.*.harga_satuan'   => 'nullable|integer|min:0',
+            'items.*.harga_satuan'   => 'nullable|numeric|min:0',
             'items.*.keterangan'     => 'nullable|string|max:255',
-            'items.*.subtotal'       => 'required|integer|min:0',
+            'items.*.subtotal'       => 'required|numeric|min:0',
         ]);
 
         foreach ($validated['items'] as $index => $item) {
@@ -217,22 +304,22 @@ class NotaJalanController extends Controller
                 Transaksi_keluar_detail::create([
                     'transaksi_keluar_id' => $notaJalan->id,
                     'tipe'                => 'biaya_pengerjaan',
-                    'nama_item'           => $item['keterangan'],
-                    'keterangan'          => $item['keterangan'],
+                    'nama_item'           => $item['keterangan'] ?? null,
+                    'keterangan'          => $item['keterangan'] ?? null,
                     'qty'                 => null,
                     'satuan'              => null,
                     'harga_satuan'        => null,
-                    'subtotal'            => $item['subtotal'],
+                    'subtotal'            => $item['subtotal'] ?? 0,
                 ]);
             } else {
                 Transaksi_keluar_detail::create([
                     'transaksi_keluar_id' => $notaJalan->id,
                     'tipe'                => 'per_item',
-                    'nama_item'           => $item['nama_item'],
-                    'qty'                 => $item['qty'],
-                    'satuan'              => $item['satuan'],
-                    'harga_satuan'        => $item['harga_satuan'],
-                    'subtotal'            => $item['subtotal'],
+                    'nama_item'           => $item['nama_item'] ?? null,
+                    'qty'                 => $item['qty'] ?? null,
+                    'satuan'              => $item['satuan'] ?? null,
+                    'harga_satuan'        => $item['harga_satuan'] ?? null,
+                    'subtotal'            => $item['subtotal'] ?? 0,
                 ]);
             }
         }

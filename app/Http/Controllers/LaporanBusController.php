@@ -15,21 +15,33 @@ class LaporanBusController extends Controller
     {
         $busList = Bus::orderBy('nama_bus')->get();
 
-        $query = Transaksi_keluar::with('bus', 'details')
-                                  ->orderBy('tanggal', 'desc');
+        // Pastikan select dan join dengan nama tabel yang sesuai di Model
+        $query = Transaksi_keluar::select('transaksi_keluar.*')
+            ->join('bus', 'transaksi_keluar.bus_id', '=', 'bus.id')
+            ->with('bus', 'details')
+            // REVISI PENTING: Gunakan plat_nomor sebagai pengurutan utama agar tidak terselip
+            ->orderBy('bus.plat_nomor', 'asc') 
+            // Baru setelah plat dikelompokkan, urutkan berdasarkan waktu di dalam masing-masing plat
+            ->orderBy('transaksi_keluar.tanggal', 'desc'); 
 
         if ($request->filled('bus_id')) {
-            $query->where('bus_id', $request->bus_id);
+            $query->where('transaksi_keluar.bus_id', $request->bus_id);
+        }
+
+        if ($request->filled('nama_item')) {
+            $query->whereHas('details', function ($q) use ($request) {
+                $q->where('nama_item', 'like', '%' . $request->nama_item . '%');
+            });
         }
 
         if ($request->filled('tanggal')) {
-            $query->whereDate('tanggal', $request->tanggal);
+            $query->whereDate('transaksi_keluar.tanggal', $request->tanggal);
         } else {
             if ($request->filled('bulan')) {
-                $query->whereMonth('tanggal', $request->bulan);
+                $query->whereMonth('transaksi_keluar.tanggal', $request->bulan);
             }
             if ($request->filled('tahun')) {
-                $query->whereYear('tanggal', $request->tahun);
+                $query->whereYear('transaksi_keluar.tanggal', $request->tahun);
             }
         }
 
@@ -55,6 +67,12 @@ class LaporanBusController extends Controller
             if ($request->filled('tahun')) {
                 $query->whereYear('tanggal', $request->tahun);
             }
+        }
+
+        if ($request->filled('nama_item')) {
+            $query->whereHas('details', function ($q) use ($request) {
+                $q->where('nama_item', 'like', '%' . $request->nama_item . '%');
+            });
         }
 
         $transaksis = $query->get();

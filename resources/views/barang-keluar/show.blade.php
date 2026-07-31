@@ -108,7 +108,8 @@
                     @if($detail->tipe === 'per_item' && $detail->barang && $detail->barang->foto)
                         <img src="{{ asset('storage/' . $detail->barang->foto) }}"
                             width="50"
-                            style="border-radius:5px; object-fit:cover; height:50px;">
+                            style="border-radius:5px; object-fit:cover; height:50px;"
+                            onclick="showPreview(event, '{{ asset('storage/' . $detail->barang->foto) }}')">
                     @else
                         <span class="text-muted">-</span>
                     @endif
@@ -158,5 +159,129 @@
         </div>
 
     </x-adminlte-card>
+
+    {{-- Overlay Modal untuk Preview Gambar --}}
+    <div id="image-preview-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 99999; justify-content: center; align-items: center; flex-direction: column;" onclick="if(event.target.id === 'image-preview-overlay') closePreview()">
+        <span onclick="closePreview()" style="position: absolute; top: 20px; right: 30px; font-size: 40px; color: white; cursor: pointer; user-select: none;">&times;</span>
+        <img id="image-preview-src" src="" style="max-width: 90%; max-height: 85%; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
+    </div>
+
+    @section('js')
+
+        <script>
+            // ========== Fungsi Preview Gambar ==========
+        function showPreview(event, src) {
+            // Mencegah select2 menganggap ini sebagai klik item (mencegah dropdown tertutup)
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const overlay = document.getElementById('image-preview-overlay');
+            const img = document.getElementById('image-preview-src');
+            img.src = src;
+            overlay.style.display = 'flex';
+        }
+
+        function closePreview() {
+            const overlay = document.getElementById('image-preview-overlay');
+            overlay.style.display = 'none';
+            document.getElementById('image-preview-src').src = '';
+        }
+
+        // ========== Inisialisasi Select2 Custom ==========
+        function initSelect2Barang(row) {
+            const select = $(row).find('.select-barang');
+            if (!select.length) return;
+
+            select.select2({
+                dropdownParent: $(row),
+                placeholder: '-- Cari nama barang atau kode barang --',
+                allowClear: true,
+                width: '100%',
+                templateResult: function (option) {
+                    if (!option.id || option.id === '') return option.text;
+
+                    const b = barangs[option.id] || barangs[parseInt(option.id)];
+                    if (!b) return option.text;
+
+                    const foto = b.foto
+                        ? `<img src="${b.foto}" class="select2-barang-foto" onmouseup="showPreview(event, '${b.foto}')" style="cursor: zoom-in;" title="Klik untuk memperbesar">`
+                        : `<div class="select2-barang-foto-placeholder"><i class="fas fa-image"></i></div>`;
+
+                    const stokClass = b.stok_saat_ini > 0 ? 'stok-ada' : 'stok-habis';
+                    const stokText  = b.stok_saat_ini > 0
+                        ? `Stok: ${b.stok_saat_ini} ${b.satuan}`
+                        : 'Stok Habis';
+
+                    const harga = Number(b.harga_jual).toLocaleString('id-ID');
+
+                    let gudangText = b.gudang ? b.gudang.replace(/_/g, ' ') : '-';
+                    gudangText = gudangText.replace(/\b\w/g, l => l.toUpperCase());
+
+                    return $(`
+                        <div class="select2-barang-option">
+                            ${foto}
+                            <div class="select2-barang-info">
+                                <div class="nama">${b.nama_barang}</div>
+                                <div class="baris-dua">
+                                    <span><i class="fas fa-barcode"></i> ${b.kode_barang}</span>
+                                    <span class="${stokClass}"><i class="fas fa-boxes"></i> ${stokText}</span>
+                                    <span><i class="fas fa-warehouse"></i> ${gudangText}</span>
+                                </div>
+                                <div class="baris-tiga">
+                                    <span><i class="fas fa-tag"></i> Rp ${harga} / pcs</span>
+                                    <span><i class="fas fa-calendar"></i> ${b.tanggal_masuk}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                },
+                templateSelection: function (option) {
+                    if (!option.id) return option.text;
+                    const b = barangs[option.id] || barangs[parseInt(option.id)];
+                    if (!b) return option.text;
+                    return `${b.nama_barang} (${b.kode_barang})`;
+                }
+            });
+
+            // Trigger saat barang dipilih (Autofill Kode, Satuan, Harga Jual)
+            select.on('change', function () {
+                const b = barangs[$(this).val()];
+                const r = $(this).closest('.item-row')[0];
+                const info = r.querySelector('.foto-lama-info');
+                const optLabel = r.querySelector('.foto-optional-label');
+                const inputSatuan = r.querySelector('.input-satuan');
+                const inputHargaJual = r.querySelector('.input-harga-jual');
+                const inputHargaJualValue = r.querySelector('.input-harga-jual-value');
+                const inputKodeBarang = r.querySelector('.input-kode-barang');
+                
+                if (b) {
+                    if(info) info.style.display = 'inline';
+                    if(optLabel) optLabel.style.display = 'inline';
+                    
+                    if(inputSatuan) inputSatuan.value = b.satuan;
+                    if(inputKodeBarang) inputKodeBarang.value = b.kode_barang; // Set default kode_barang item lama
+                    if(inputHargaJualValue) {
+                        const hargaBersih = Math.round(parseFloat(b.harga_jual));
+                        inputHargaJualValue.value = hargaBersih;
+                        inputHargaJual.value = formatRupiah(hargaBersih);
+                    }
+                } else {
+                    if(info) info.style.display = 'none';
+                    if(optLabel) optLabel.style.display = 'none';
+                    
+                    if(inputSatuan) inputSatuan.value = '';
+                    if(inputKodeBarang) inputKodeBarang.value = '-';
+                    if(inputHargaJualValue) {
+                        inputHargaJualValue.value = '';
+                        inputHargaJual.value = '';
+                    }
+                }
+
+                hitungSubtotalItem(r);
+            });
+        }
+        </script>
+        
+    @stop
 
     @stop

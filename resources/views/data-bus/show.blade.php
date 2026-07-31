@@ -39,7 +39,7 @@
 </x-adminlte-card>
 
 {{-- RIWAYAT TRANSAKSI KELUAR --}}
-<x-adminlte-card title="Riwayat Pengeluaran" theme="danger" icon="fas fa-arrow-up" style="text-transform: uppercase;">
+{{-- <x-adminlte-card title="Riwayat Pengeluaran" theme="danger" icon="fas fa-arrow-up" style="text-transform: uppercase;">
 
     <table class="table table-bordered table-striped">
 
@@ -87,6 +87,74 @@
                 <td colspan="3" class="text-right"><strong>Total Pengeluaran</strong></td>
                 <td>
                     <strong>
+                        Rp {{ number_format($bus->transaksiKeluar->sum('total_transaksi'), 0, ',', '.') }}
+                    </strong>
+                </td>
+                <td></td>
+            </tr>
+        </tfoot>
+
+    </table>
+
+</x-adminlte-card> --}}
+
+{{-- RIWAYAT TRANSAKSI KELUAR --}}
+<x-adminlte-card title="Riwayat Pengeluaran" theme="danger" icon="fas fa-arrow-up" style="text-transform: uppercase;">
+
+    <table class="table table-bordered table-striped">
+
+        <thead class="text-center">
+            <tr>
+                <th width="5%">No</th>
+                <th>Tanggal</th>
+                <th>Kategori Nota</th> {{-- KOLOM BARU --}}
+                <th>Item Transaksi</th>
+                <th>Total</th>
+                <th width="10%">Aksi</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @forelse ($bus->transaksiKeluar as $index => $transaksi)
+            <tr>
+                <td class="text-center">{{ $index + 1 }}</td>
+                <td>{{ \Carbon\Carbon::parse($transaksi->tanggal)->format('d-m-Y H:i') }}</td>
+                <td class="text-center">
+                    <span class="badge badge-info">
+                        {{ $transaksi->kategori === 'normal' ? 'Nota Bengkel' : str_replace('_', ' ', $transaksi->kategori) }}
+                    </span>
+                </td>
+                <td>
+                    @forelse ($transaksi->details as $detail)
+                        <span class="badge badge-light border text-dark">
+                            {{ $detail->nama_item }}
+                        </span>
+                    @empty
+                        <span class="text-muted">-</span>
+                    @endforelse
+                </td>
+                <td class="text-right">Rp {{ number_format($transaksi->total_transaksi, 0, ',', '.') }}</td>
+                <td class="text-center">
+                    <a href="{{ route('barang-keluar.show', $transaksi->id) }}"
+                       class="btn btn-info btn-sm">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                </td>
+            </tr>
+            @empty
+            <tr>
+                {{-- Ubah colspan dari 5 menjadi 6 karena ada tambahan kolom --}}
+                <td colspan="6" class="text-center text-muted">Belum ada riwayat pengeluaran</td>
+            </tr>
+            @endforelse
+        </tbody>
+
+        <tfoot>
+            <tr>
+                {{-- Ubah colspan dari 3 menjadi 4 --}}
+                <td colspan="4" class="text-right"><strong>Total Pengeluaran</strong></td>
+                <td class="text-right">
+                    <strong class="text-danger">
                         Rp {{ number_format($bus->transaksiKeluar->sum('total_transaksi'), 0, ',', '.') }}
                     </strong>
                 </td>

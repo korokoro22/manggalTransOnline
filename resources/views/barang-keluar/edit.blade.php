@@ -313,12 +313,37 @@
 
     </form>
 
+    {{-- Overlay Modal untuk Preview Gambar --}}
+    <div id="image-preview-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 99999; justify-content: center; align-items: center; flex-direction: column;" onclick="if(event.target.id === 'image-preview-overlay') closePreview()">
+        <span onclick="closePreview()" style="position: absolute; top: 20px; right: 30px; font-size: 40px; color: white; cursor: pointer; user-select: none;">&times;</span>
+        <img id="image-preview-src" src="" style="max-width: 90%; max-height: 85%; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
+    </div>
+
 </x-adminlte-card>
 
 @section('js')
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     let itemIndex = {{ $transaksi->details->count() }};
+
+    // ========== Fungsi Preview Gambar ==========
+    function showPreview(event, src) {
+        // Mencegah select2 menganggap ini sebagai klik item (mencegah dropdown tertutup)
+        event.preventDefault();
+        event.stopPropagation();
+        
+        const overlay = document.getElementById('image-preview-overlay');
+        const img = document.getElementById('image-preview-src');
+        img.src = src;
+        overlay.style.display = 'flex';
+    }
+
+    function closePreview() {
+        const overlay = document.getElementById('image-preview-overlay');
+        overlay.style.display = 'none';
+        document.getElementById('image-preview-src').src = '';
+    }
+
     let paketList = [];
 
     const ajaxUrl  = "{{ route('barang-keluar.paket-by-bus', ':busId') }}";
@@ -342,7 +367,7 @@
             if (!b) return option.text;
 
             const foto = b.foto
-                ? `<img src="${b.foto}" class="select2-barang-foto">`
+                ? `<img src="${b.foto}" class="select2-barang-foto" onmouseup="showPreview(event, '${b.foto}')" style="cursor: zoom-in;" title="Klik untuk memperbesar">`
                 : `<div class="select2-barang-foto-placeholder"><i class="fas fa-image"></i></div>`;
 
             const stokClass = b.stok_saat_ini > 0 ? 'stok-ada' : 'stok-habis';

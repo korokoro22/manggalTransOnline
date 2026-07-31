@@ -92,6 +92,16 @@
                 </div>
             </div>
 
+            <div class="col-md-4" style="text-transform: uppercase;">
+                <label>Nama Barang</label>
+                <input type="text"
+                        style="text-transform: uppercase;"
+                       name="nama_item"
+                       class="form-control"
+                       placeholder="Cari nama barang..."
+                       value="{{ request('nama_item') }}">
+            </div>
+
             {{-- <div class="col-md-2 d-flex align-items-end">
                 <div class="form-group w-100">
                     <button type="submit" class="btn btn-primary btn-block" style="text-transform: uppercase;">
@@ -103,17 +113,15 @@
                 </div>
                 
             </div> --}}
-            <div class="mt-2">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-search"></i> FILTER
-                </button>
-                <a href="{{ route('laporan-bus.show', $bus->id) }}" class="btn btn-secondary">Reset</a>
-            </div>
+            
 
         </div>
-
-        
-
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i> FILTER
+            </button>
+            <a href="{{ route('laporan-bus.show', $bus->id) }}" class="btn btn-secondary">Reset</a>
+        </div>
     </form>
 
 </x-adminlte-card>
@@ -128,7 +136,7 @@
 
     <x-adminlte-card style="text-transform: uppercase;" title="Pengeluaran {{ $periode->translatedFormat('F Y') }}" theme="danger" icon="fas fa-arrow-up">
 
-        <table class="table table-bordered table-striped">
+        {{-- <table class="table table-bordered table-striped">
             <thead class="text-center">
                 <tr>
                     <th width="5%">No</th>
@@ -167,6 +175,69 @@
             <tfoot>
                 <tr>
                     <td colspan="3" class="text-right"><strong>Total {{ $periode->translatedFormat('F Y') }}</strong></td>
+                    <td class="text-right text-danger">
+                        <strong>Rp {{ number_format($totalBulan, 0, ',', '.') }}</strong>
+                    </td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table> --}}
+        <table class="table table-bordered table-striped">
+            <thead class="text-center">
+                <tr>
+                    <th width="5%">No</th>
+                    <th>Tanggal</th>
+                    <th>Kategori Nota</th> {{-- KOLOM BARU --}}
+                    <th>Item Transaksi</th>
+                    <th>Total</th>
+                    <th width="10%">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($transaksis as $index => $transaksi)
+                <tr>
+                    <td class="text-center">{{ $index + 1 }}</td>
+                    <td>{{ \Carbon\Carbon::parse($transaksi->tanggal)->format('d-m-Y H:i') }}</td>
+                    <td class="text-center">
+                        <span class="badge badge-info">
+                            {{ $transaksi->kategori === 'normal' ? 'Nota Bengkel' : str_replace('_', ' ', $transaksi->kategori) }}
+                        </span>
+                    </td>
+                    <td>
+                        @foreach ($transaksi->details as $detail)
+                            <span class="badge badge-light border text-dark">{{ $detail->nama_item }}</span>
+                        @endforeach
+                    </td>
+                    <td class="text-right text-danger">
+                        Rp {{ number_format($transaksi->total_transaksi, 0, ',', '.') }}
+                    </td>
+                    {{-- <td class="text-center">
+                        <a href="{{ route('barang-keluar.show', $transaksi->id) }}"
+                           class="btn btn-info btn-sm">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{{ route('barang-keluar.edit', $transaksi->id) }}"
+                           class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </td> --}}
+
+                    <td class="text-center">
+                        <a href="{{ $transaksi->kategori === 'normal' ? route('barang-keluar.show', $transaksi->id) : route('nota-jalan.show', $transaksi->id) }}"
+                        class="btn btn-info btn-sm">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{{ $transaksi->kategori === 'normal' ? route('barang-keluar.edit', $transaksi->id) : route('nota-jalan.edit', $transaksi->id) }}"
+                        class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" class="text-right"><strong>Total {{ $periode->translatedFormat('F Y') }}</strong></td>
                     <td class="text-right text-danger">
                         <strong>Rp {{ number_format($totalBulan, 0, ',', '.') }}</strong>
                     </td>

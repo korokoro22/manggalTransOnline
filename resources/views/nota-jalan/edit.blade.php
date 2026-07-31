@@ -8,6 +8,25 @@
 
 @section('content')
 
+@if ($errors->any())
+    <div class="alert alert-danger alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+        <h5><i class="icon fas fa-ban"></i> Gagal Menyimpan!</h5>
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+@if (session('error'))
+    <div class="alert alert-danger alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+        {{ session('error') }}
+    </div>
+@endif
+
 <form action="{{ route('nota-jalan.update', $notaJalan->id) }}" method="POST" enctype="multipart/form-data" style="text-transform: uppercase;">
 @csrf
 @method('PUT')
@@ -117,80 +136,130 @@
 {{-- ITEM BARANG --}}
 <x-adminlte-card title="Item Dibeli" theme="warning" icon="fas fa-shopping-basket" style="text-transform: uppercase;">
 
-    <small class="text-muted">Tambahkan item yang dibeli di perjalanan</small>
+    <small class="text-muted">Edit item yang dibeli di perjalanan</small>
 
     <div class="mt-3" id="item-container">
 
         @foreach($notaJalan->details as $i => $detail)
         <div class="card card-outline card-secondary mb-3 item-row">
             <div class="card-header">
-                <h6 class="card-title mb-0">Item #{{ $i + 1 }}</h6>
+                <h6 class="card-title mb-0">
+                    Item #{{ $i + 1 }}
+                    <span class="badge badge-info float-right">
+                        {{ $detail->tipe === 'per_item' ? 'Per Item' : 'Biaya Pengerjaan' }}
+                    </span>
+                </h6>
             </div>
             <div class="card-body">
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label>Nama Item</label>
-                            <input type="text"
-                                   name="items[{{ $i }}][nama_item]"
-                                   style="text-transform: uppercase;"
-                                   class="form-control"
-                                   value="{{ $detail->nama_item }}"
-                                   required>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>Qty</label>
-                            <input type="number"
-                                   name="items[{{ $i }}][qty]"
-                                   style="text-transform: uppercase;"
-                                   class="form-control"
-                                   value="{{ $detail->qty }}"
-                                   min="1"
-                                   required>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>Satuan</label>
-                            <input type="text"
-                                   name="items[{{ $i }}][satuan]"
-                                   style="text-transform: uppercase;"
-                                   class="form-control"
-                                   value="{{ $detail->satuan }}"
-                                   required>
-                        </div>
-                    </div>
-                </div>
+                {{-- Hidden input tipe (karena radio button dihilangkan untuk item bawaan) --}}
+                <input type="hidden" name="items[{{ $i }}][tipe]" value="{{ $detail->tipe }}">
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label>Harga Satuan</label>
-                            <input type="number"
-                                   name="items[{{ $i }}][harga_satuan]"
-                                   style="text-transform: uppercase;"
-                                   class="form-control"
-                                   value="{{ $detail->harga_satuan }}"
-                                   min="0"
-                                   required>
+                @if($detail->tipe === 'per_item')
+                    {{-- Section Per Item (Hanya tampil jika tipe = per_item) --}}
+                    <div class="section-per-item">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Nama Item</label>
+                                    <input type="text"
+                                           name="items[{{ $i }}][nama_item]"
+                                           style="text-transform: uppercase;"
+                                           class="form-control input-nama-item"
+                                           placeholder="Masukkan nama item"
+                                           value="{{ $detail->nama_item }}"
+                                           required>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Qty</label>
+                                    <input type="number"
+                                           name="items[{{ $i }}][qty]"
+                                           style="text-transform: uppercase;"
+                                           class="form-control input-qty"
+                                           placeholder="Contoh: 2"
+                                           value="{{ $detail->qty }}"
+                                           min="1"
+                                           required>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Satuan</label>
+                                    <input type="text"
+                                           name="items[{{ $i }}][satuan]"
+                                           style="text-transform: uppercase;"
+                                           class="form-control input-satuan"
+                                           placeholder="Pcs, Botol, Liter"
+                                           value="{{ $detail->satuan }}"
+                                           required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Harga Satuan</label>
+                                    <input type="number"
+                                           name="items[{{ $i }}][harga_satuan]"
+                                           style="text-transform: uppercase;"
+                                           class="form-control input-harga-satuan"
+                                           placeholder="Harga per satuan"
+                                           value="{{ $detail->harga_satuan }}"
+                                           min="0"
+                                           required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Subtotal <small class="text-muted">(otomatis, bisa diedit)</small></label>
+                                    <input type="number"
+                                           name="items[{{ $i }}][subtotal]"
+                                           style="text-transform: uppercase;"
+                                           class="form-control input-subtotal"
+                                           placeholder="Subtotal"
+                                           value="{{ $detail->subtotal }}"
+                                           min="0"
+                                           required>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label>Subtotal <small class="text-muted">(otomatis, bisa diedit)</small></label>
-                            <input type="number"
-                                   name="items[{{ $i }}][subtotal]"
-                                   style="text-transform: uppercase;"
-                                   class="form-control"
-                                   value="{{ $detail->subtotal }}"
-                                   min="0"
-                                   required>
+                @else
+                    {{-- Section Biaya Pengerjaan (Hanya tampil jika tipe = biaya_pengerjaan) --}}
+                    <div class="section-biaya-pengerjaan">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label>Keterangan Pengerjaan</label>
+                                    {{-- Value mengambil dari keterangan, fallback ke nama_item jika format DB lama --}}
+                                    <input type="text"
+                                           name="items[{{ $i }}][keterangan]"
+                                           class="form-control input-keterangan-pengerjaan"
+                                           style="text-transform: uppercase;"
+                                           placeholder="Contoh: Ongkos bongkar muat, servis darurat di jalan"
+                                           value="{{ $detail->keterangan ?? $detail->nama_item }}"
+                                           required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Biaya Pengerjaan</label>
+                                    <input type="number"
+                                           name="items[{{ $i }}][subtotal]"
+                                           class="form-control input-biaya-pengerjaan"
+                                           placeholder="Masukkan biaya"
+                                           style="text-transform: uppercase;"
+                                           value="{{ $detail->subtotal }}"
+                                           min="0"
+                                           required>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                @endif
 
                 <button type="button" class="btn btn-danger btn-sm btn-remove-item" {{ $notaJalan->details->count() === 1 ? 'disabled' : '' }}>
                     <i class="fas fa-trash"></i> Hapus Item
@@ -242,6 +311,7 @@
     let itemIndex = {{ $notaJalan->details->count() }};
 
     function buildItemRow(index) {
+        // Saat form item baru dibuat, opsi tipe radio button ditampilkan
         return `
         <div class="card card-outline card-secondary mb-3 item-row">
             <div class="card-header">
@@ -249,38 +319,71 @@
             </div>
             <div class="card-body" style="text-transform: uppercase;">
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label>Nama Item</label>
-                            <input type="text" name="items[${index}][nama_item]" class="form-control" placeholder="Masukkan nama item" style="text-transform: uppercase;" required>
+                <div class="form-group">
+                    <label>Tipe Item</label>
+                    <div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input tipe-radio" type="radio" name="items[${index}][tipe]" value="per_item" checked>
+                            <label class="form-check-label">Per Item</label>
                         </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>Qty</label>
-                            <input type="number" name="items[${index}][qty]" class="form-control" placeholder="Contoh: 2" style="text-transform: uppercase;" min="1" required>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>Satuan</label>
-                            <input type="text" name="items[${index}][satuan]" class="form-control" placeholder="Pcs, Botol, Liter" style="text-transform: uppercase;" required>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input tipe-radio" type="radio" name="items[${index}][tipe]" value="biaya_pengerjaan">
+                            <label class="form-check-label">Biaya Pengerjaan</label>
                         </div>
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label>Harga Satuan</label>
-                            <input type="number" name="items[${index}][harga_satuan]" class="form-control" placeholder="Harga per satuan" min="0" style="text-transform: uppercase;" required>
+                <div class="section-per-item">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Nama Item</label>
+                                <input type="text" name="items[${index}][nama_item]" class="form-control input-nama-item" placeholder="Masukkan nama item" style="text-transform: uppercase;">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Qty</label>
+                                <input type="number" name="items[${index}][qty]" class="form-control input-qty" placeholder="Contoh: 2" min="1" style="text-transform: uppercase;">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Satuan</label>
+                                <input type="text" name="items[${index}][satuan]" class="form-control input-satuan" placeholder="Pcs, Botol, Liter" style="text-transform: uppercase;">
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label>Subtotal <small class="text-muted">(otomatis, bisa diedit)</small></label>
-                            <input type="number" name="items[${index}][subtotal]" class="form-control" placeholder="Subtotal" min="0" style="text-transform: uppercase;" required>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Harga Satuan</label>
+                                <input type="number" name="items[${index}][harga_satuan]" class="form-control input-harga-satuan" placeholder="Harga per satuan" min="0" style="text-transform: uppercase;">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Subtotal <small class="text-muted">(otomatis, bisa diedit)</small></label>
+                                <input type="number" name="items[${index}][subtotal]" class="form-control input-subtotal" placeholder="Subtotal" min="0" style="text-transform: uppercase;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-biaya-pengerjaan" style="display:none">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label>Keterangan Pengerjaan</label>
+                                <input type="text" name="items[${index}][keterangan]" class="form-control input-keterangan-pengerjaan" placeholder="Contoh: Ongkos bongkar muat, servis darurat" style="text-transform: uppercase;" disabled>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Biaya Pengerjaan</label>
+                                <input type="number" name="items[${index}][subtotal]" class="form-control input-biaya-pengerjaan" placeholder="Masukkan biaya" min="0" style="text-transform: uppercase;" disabled>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -305,6 +408,7 @@
         if (e.target.closest('.btn-remove-item')) {
             e.target.closest('.item-row').remove();
             updateRemoveButtons();
+            hitungTotalKeseluruhan();
         }
     });
 
@@ -312,29 +416,58 @@
         const rows = document.querySelectorAll('.item-row');
         rows.forEach((row) => {
             const btn = row.querySelector('.btn-remove-item');
-            btn.disabled = rows.length === 1;
+            if(btn) btn.disabled = rows.length === 1;
         });
     }
 
     function hitungSubtotalItem(row) {
-        const qtyInput   = row.querySelector('input[name$="[qty]"]');
-        const hargaInput = row.querySelector('input[name$="[harga_satuan]"]');
-        const subtotalInput = row.querySelector('input[name$="[subtotal]"]');
+        const qtyInput   = row.querySelector('.section-per-item input[name$="[qty]"]');
+        const hargaInput = row.querySelector('.section-per-item input[name$="[harga_satuan]"]');
+        const subtotalInput = row.querySelector('.section-per-item input[name$="[subtotal]"]');
 
-        const qty   = parseFloat(qtyInput.value) || 0;
-        const harga = parseFloat(hargaInput.value) || 0;
+        const qty   = parseFloat(qtyInput?.value) || 0;
+        const harga = parseFloat(hargaInput?.value) || 0;
 
-        subtotalInput.value = qty * harga;
+        if (subtotalInput) subtotalInput.value = qty * harga;
     }
 
     function hitungTotalKeseluruhan() {
         let total = 0;
-        document.querySelectorAll('.item-row input[name$="[subtotal]"]').forEach(function (input) {
+        // Hanya jumlahkan input subtotal yang TIDAK disabled
+        document.querySelectorAll('.item-row input[name$="[subtotal]"]:not([disabled])').forEach(function (input) {
             total += parseFloat(input.value) || 0;
         });
         document.querySelector('input[name="total"]').value = total;
     }
 
+    // ========== Event: ganti tipe item ==========
+    document.getElementById('item-container').addEventListener('change', function (e) {
+        if (e.target.classList.contains('tipe-radio')) {
+            const row = e.target.closest('.item-row');
+            const sectionPerItem = row.querySelector('.section-per-item');
+            const sectionBiaya   = row.querySelector('.section-biaya-pengerjaan');
+
+            if (e.target.value === 'biaya_pengerjaan') {
+                sectionPerItem.style.display = 'none';
+                sectionPerItem.querySelectorAll('input').forEach(i => i.disabled = true);
+                
+                sectionBiaya.style.display   = 'block';
+                sectionBiaya.querySelectorAll('input').forEach(i => i.disabled = false);
+            } else {
+                sectionPerItem.style.display = 'block';
+                sectionPerItem.querySelectorAll('input').forEach(i => i.disabled = false);
+                
+                sectionBiaya.style.display   = 'none';
+                sectionBiaya.querySelectorAll('input').forEach(i => i.disabled = true);
+            }
+
+            // Kosongkan nilai subtotal agar tidak bingung
+            row.querySelectorAll('input[name$="[subtotal]"]').forEach(i => i.value = '');
+            hitungTotalKeseluruhan();
+        }
+    });
+
+    // ========== Event: hitung subtotal ==========
     document.getElementById('item-container').addEventListener('input', function (e) {
         if (e.target.matches('input[name$="[qty]"]') || e.target.matches('input[name$="[harga_satuan]"]')) {
             const row = e.target.closest('.item-row');
@@ -347,6 +480,7 @@
             hitungTotalKeseluruhan();
         }
     });
+
 </script>
 @stop
 

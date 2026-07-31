@@ -49,10 +49,11 @@ class PaketServiceController extends Controller {
     // }
 
     public function create()
-{
-    $buses   = Bus::orderBy('nama_bus')->get();
-    $barangs = Barang::whereIn('kategori', ['oli_mesin', 'filter_solar'])
-                    ->orderBy('nama_barang')
+    {
+        $buses   = Bus::orderBy('nama_bus')->get();
+        
+        // Mengambil semua barang dari database tanpa batasan kategori tertentu
+        $barangs = Barang::orderBy('nama_barang')
                     ->get()
                     ->map(fn($b) => [
                         'id'             => $b->id,
@@ -63,12 +64,13 @@ class PaketServiceController extends Controller {
                         'satuan'         => $b->satuan,
                         'stok_saat_ini'  => $b->stok_saat_ini,
                         'gudang'         => $b->gudang,
-                        'kategori_label' => $b->kategori == 'oli_mesin' ? 'Oli Mesin' : 'Filter Solar'
+                        // Label kategori otomatis rapi (contoh: 'oli_mesin' -> 'Oli Mesin', 'kampas_rem' -> 'Kampas Rem')
+                        'kategori_label' => ucwords(str_replace('_', ' ', $b->kategori))
                     ])
                     ->keyBy('id');
 
-    return view('paket-service.create', compact('buses', 'barangs'));
-}
+        return view('paket-service.create', compact('buses', 'barangs'));
+    }
 
     public function store(Request $request)
     {

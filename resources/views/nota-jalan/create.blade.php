@@ -8,6 +8,25 @@
 
 @section('content')
 
+@if ($errors->any())
+    <div class="alert alert-danger alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+        <h5><i class="icon fas fa-ban"></i> Validasi Gagal!</h5>
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+@if (session('error'))
+    <div class="alert alert-danger alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+        {{ session('error') }}
+    </div>
+@endif
+
 <form action="{{ route('nota-jalan.store') }}" method="POST" enctype="multipart/form-data" style="text-transform: uppercase;">
 @csrf
 
@@ -206,30 +225,32 @@
 
                 {{-- Section Biaya Pengerjaan --}}
                 <div class="section-biaya-pengerjaan" style="display:none">
-    <div class="row">
-        <div class="col-md-8">
-            <div class="form-group">
-                <label>Keterangan Pengerjaan</label>
-                <input type="text"
-                       name="items[0][keterangan]"
-                       class="form-control input-keterangan-pengerjaan"
-                       style="text-transform: uppercase;"
-                       placeholder="Contoh: Ongkos bongkar muat, servis darurat di jalan">
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="form-group">
-                <label>Biaya Pengerjaan</label>
-                <input type="number"
-                       name="items[0][subtotal]"
-                       class="form-control input-biaya-pengerjaan"
-                       placeholder="Masukkan biaya"
-                       style="text-transform: uppercase;"
-                       min="0">
-            </div>
-        </div>
-    </div>
-</div>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label>Keterangan Pengerjaan</label>
+                                <input type="text"
+                                    name="items[0][keterangan]"
+                                    class="form-control input-keterangan-pengerjaan"
+                                    style="text-transform: uppercase;"
+                                    placeholder="Contoh: Ongkos bongkar muat, servis darurat di jalan"
+                                    disabled>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Biaya Pengerjaan</label>
+                                <input type="number"
+                                    name="items[0][subtotal]"
+                                    class="form-control input-biaya-pengerjaan"
+                                    placeholder="Masukkan biaya"
+                                    style="text-transform: uppercase;"
+                                    min="0"
+                                    disabled>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <button type="button" class="btn btn-danger btn-sm btn-remove-item" disabled>
                     <i class="fas fa-trash"></i> Hapus Item
@@ -345,13 +366,13 @@
                         <div class="col-md-8">
                             <div class="form-group">
                                 <label>Keterangan Pengerjaan</label>
-                                <input type="text" name="items[${index}][keterangan]" class="form-control input-keterangan-pengerjaan" placeholder="Contoh: Ongkos bongkar muat, servis darurat di jalan" style="text-transform: uppercase;">
+                                <input type="text" name="items[${index}][keterangan]" class="form-control input-keterangan-pengerjaan" placeholder="Contoh: Ongkos bongkar muat, servis darurat di jalan" style="text-transform: uppercase;" required>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label>Biaya Pengerjaan</label>
-                                <input type="number" name="items[${index}][subtotal]" class="form-control input-biaya-pengerjaan" placeholder="Masukkan biaya" min="0" style="text-transform: uppercase;">
+                                <input type="number" name="items[${index}][subtotal]" class="form-control input-biaya-pengerjaan" placeholder="Masukkan biaya" min="0" style="text-transform: uppercase;" required>
                             </div>
                         </div>
                     </div>
@@ -408,6 +429,27 @@
     }
 
     // ========== Event: ganti tipe item ==========
+    // document.getElementById('item-container').addEventListener('change', function (e) {
+    //     if (e.target.classList.contains('tipe-radio')) {
+    //         const row = e.target.closest('.item-row');
+    //         const sectionPerItem = row.querySelector('.section-per-item');
+    //         const sectionBiaya   = row.querySelector('.section-biaya-pengerjaan');
+
+    //         if (e.target.value === 'biaya_pengerjaan') {
+    //             sectionPerItem.style.display = 'none';
+    //             sectionBiaya.style.display   = 'block';
+    //         } else {
+    //             sectionPerItem.style.display = 'block';
+    //             sectionBiaya.style.display   = 'none';
+    //         }
+
+    //         // reset subtotal saat ganti tipe
+    //         row.querySelector('.input-subtotal').value = 0;
+    //         hitungTotalKeseluruhan();
+    //     }
+    // });
+
+    // ========== Event: ganti tipe item ==========
     document.getElementById('item-container').addEventListener('change', function (e) {
         if (e.target.classList.contains('tipe-radio')) {
             const row = e.target.closest('.item-row');
@@ -416,14 +458,29 @@
 
             if (e.target.value === 'biaya_pengerjaan') {
                 sectionPerItem.style.display = 'none';
+                // Matikan input per_item agar tidak dikirim
+                sectionPerItem.querySelectorAll('input').forEach(i => i.disabled = true);
+                
                 sectionBiaya.style.display   = 'block';
+                // Nyalakan input biaya_pengerjaan agar dikirim
+                sectionBiaya.querySelectorAll('input').forEach(i => i.disabled = false);
             } else {
                 sectionPerItem.style.display = 'block';
+                // Nyalakan input per_item
+                sectionPerItem.querySelectorAll('input').forEach(i => i.disabled = false);
+                
                 sectionBiaya.style.display   = 'none';
+                // Matikan input biaya_pengerjaan agar tidak dikirim
+                sectionBiaya.querySelectorAll('input').forEach(i => i.disabled = true);
             }
 
             // reset subtotal saat ganti tipe
-            row.querySelector('.input-subtotal').value = 0;
+            const subtotalInput = row.querySelector('.input-subtotal');
+            if(subtotalInput) subtotalInput.value = 0;
+            
+            const biayaInput = row.querySelector('.input-biaya-pengerjaan');
+            if(biayaInput) biayaInput.value = '';
+
             hitungTotalKeseluruhan();
         }
     });

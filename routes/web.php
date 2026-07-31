@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BarangMasukController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataBusController;
+use App\Http\Controllers\LaporanBarangController;
 use App\Http\Controllers\LaporanBusController;
 use App\Http\Controllers\MasterBarangController;
 use App\Http\Controllers\NotaJalanController;
@@ -21,6 +22,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('master-barang', MasterBarangController::class);
+    Route::get('master-barang/nama/{nama_barang}', [MasterBarangController::class, 'showByNama'])
+    ->name('master-barang.by-nama');
+    Route::get('master-barang/nama/{nama_barang}/export-pdf', [MasterBarangController::class, 'exportPdfByNama'])
+    ->name('master-barang.export-pdf-show-by-nama');
     Route::get('master-barang-export', [MasterBarangController::class, 'exportPdf'])->name('master-barang.export-pdf');
     Route::get('master-barang-export/{id}', [MasterBarangController::class, 'exportPdfShow'])->name('master-barang.export-pdf-show');
     Route::get('master-barang-json/{id}', [MasterBarangController::class, 'getJson'])->name('master-barang.json');
@@ -51,4 +56,7 @@ Route::middleware('auth')->group(function () {
     Route::get('paket-service-export', [PaketServiceController::class, 'exportPdf'])->name('paket-service.export-pdf');
     Route::get('paket-service-export/{id}', [PaketServiceController::class, 'exportPdfShow'])->name('paket-service.export-pdf-show');
 
+
+    Route::get('laporan-barang', [LaporanBarangController::class, 'index'])->name('laporan-barang.index');
+Route::get('laporan-barang/export-pdf', [LaporanBarangController::class, 'exportPdf'])->name('laporan-barang.export-pdf');
 });

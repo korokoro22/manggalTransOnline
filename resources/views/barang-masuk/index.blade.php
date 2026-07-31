@@ -31,6 +31,16 @@
 
         <div class="row">
 
+            <div class="col-md-3" style="text-transform: uppercase;">
+                <label>Nama Barang</label>
+                <input type="text"
+                        style="text-transform: uppercase;"
+                       name="nama_barang"
+                       class="form-control"
+                       placeholder="Cari nama barang..."
+                       value="{{ request('nama_barang') }}">
+            </div>
+
             <div class="col-md-3">
                 <label>No. Invoice</label>
                 <input type="text"
